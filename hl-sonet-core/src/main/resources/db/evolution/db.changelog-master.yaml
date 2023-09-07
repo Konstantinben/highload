@@ -1,0 +1,11 @@
+databaseChangeLog:
+  - include:
+      file: db/evolution/changelog/v_1_0.yaml
+  - include:
+      file: db/evolution/changelog/v_1_1.yaml
+  - include:
+      file: db/evolution/changelog/v_1_2.yaml
+  - include:
+      file: db/evolution/changelog/v_1_3.yaml
+  - include:
+      file: db/evolution/changelog/v_1_4.yaml

@@ -1,0 +1,241 @@
+version: '3.5'
+
+networks:
+  pgnet:
+  redisnet:
+
+volumes:
+  dumps:
+services:
+#  grafana:
+#    container_name: grafana
+#    image: grafana/grafana
+#    ports:
+#      - 3000:3000
+#    networks:
+#      - pgnet
+#      - redisnet
+#
+#  prometheus:
+#    container_name: prometheus
+#    image: prom/prometheus
+#    ports:
+#      - 9090:9090
+#    volumes:
+#      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+#    networks:
+#      - pgnet
+#      - redisnet
+
+  redis:
+    container_name: redis
+    image: redis:latest
+    command: redis-server
+    volumes:
+      - ./volumes/redis/:/var/lib/redis
+      - ./volumes/redis-config/:/usr/local/etc/redis/redis.conf
+    ports:
+      - 6379:6379
+    expose:
+      - 6379
+    networks:
+      - redisnet
+
+  redis-commander:
+    container_name: redis-commander
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+      - HTTP_USER=root
+      - HTTP_PASSWORD=qwerty
+    ports:
+      - 8081:8081
+    networks:
+      - redisnet
+    depends_on:
+      - redis
+
+  postgres:
+    container_name: pgmaster
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./volumes/pgmaster/:/var/lib/postgresql/data
+    networks:
+      - pgnet
+    expose:
+      - 5432
+    ports:
+      - 5432:5432
+    restart: unless-stopped
+    depends_on:
+      - pgshard1
+      - pgshard2
+
+  pgshard1:
+    container_name: pgshard1
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./volumes/pgshard1/:/var/lib/postgresql/data
+      - ./dumps/pgshard1.sql:/docker-entrypoint-initdb.d/pgshard1.sql
+    networks:
+      - pgnet
+    expose:
+      - 11432
+    ports:
+      - 11432:5432
+    restart: unless-stopped
+
+  pgshard2:
+    container_name: pgshard2
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./volumes/pgshard2/:/var/lib/postgresql/data
+      - ./dumps/pgshard2.sql:/docker-entrypoint-initdb.d/pgshard2.sql
+    networks:
+      - pgnet
+    expose:
+      - 12432
+    ports:
+      - 12432:5432
+    restart: unless-stopped
+
+#  postgres-slave-1:
+#    container_name: pgslave
+#    image: postgres
+#    environment:
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: pass
+#      POSTGRES_DB: postgres
+#    healthcheck:
+#      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#    volumes:
+#      - ./volumes/pgslave/:/var/lib/postgresql/data
+#    networks:
+#      - pgnet
+#    expose:
+#      - 15432
+#    ports:
+#      - 15432:5432
+#    restart: unless-stopped
+#
+#  postgres-slave-2:
+#    container_name: pgslave2
+#    image: postgres
+#    environment:
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: pass
+#      POSTGRES_DB: postgres
+#    healthcheck:
+#      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#    volumes:
+#      - ./volumes/pgslave2/:/var/lib/postgresql/data
+#    networks:
+#      - pgnet
+#    expose:
+#      - 25432
+#    ports:
+#      - 25432:5432
+#    restart: unless-stopped
+#
+#  postgres-exporter:
+#    container_name: pg-exporter
+#    image: prometheuscommunity/postgres-exporter
+#    ports:
+#      - 9187:9187
+#    environment:
+#      DATA_SOURCE_NAME: "postgresql://postgres:pass@postgres:5432/postgres?sslmode=disable"
+#    networks:
+#      - pgnet
+#    links:
+#      - postgres
+#      - prometheus
+#  postgres-exporter-slave-1:
+#    container_name: pg-exporter-slave-1
+#    image: prometheuscommunity/postgres-exporter
+#    ports:
+#      - 19187:9187
+#    environment:
+#      DATA_SOURCE_NAME: "postgresql://postgres:pass@postgres-slave-1:15432/postgres?sslmode=disable"
+#    networks:
+#      - pgnet
+#    links:
+#      - postgres-slave-1
+#      - prometheus
+#  postgres-exporter-slave-2:
+#    container_name: pg-exporter-slave-2
+#    image: prometheuscommunity/postgres-exporter
+#    ports:
+#      - 29187:9187
+#    environment:
+#      DATA_SOURCE_NAME: "postgresql://postgres:pass@postgres-slave-2:25432/postgres?sslmode=disable"
+#    networks:
+#      - pgnet
+#    links:
+#      - postgres-slave-2
+#      - prometheus
+
+  sonet-post:
+    image: 'kpolyanichko/hl-sonet-post-hw-7-amd64:latest'
+    build:
+      context: .
+    container_name: app-post
+    ports:
+      - 8082:8080
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
+    networks:
+      - redisnet
+
+  sonet-core:
+    image: 'kpolyanichko/hl-sonet-core-hw-7-amd64:latest'
+    build:
+      context: .
+    container_name: app-core
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      - DB_URL=jdbc:postgresql://postgres:5432/postgres
+      - DB_READ_URL=jdbc:postgresql://postgres:5432/postgres
+      - DB_PWD=pass
+      - REDIS_HOST=redis
+    networks:
+      - pgnet
+      - redisnet

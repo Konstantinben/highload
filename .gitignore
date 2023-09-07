@@ -1,0 +1,12 @@
+/gen/
+.idea
+/postgres.14
+target
+/postgres.15
+/volumes/pgasyncslave
+/volumes/pgmaster
+/volumes/pgslave_broken
+/volumes/pgshard1
+/volumes/pgshard2
+hw-3_replication
+/volumes/

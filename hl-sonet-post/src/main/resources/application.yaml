@@ -1,0 +1,46 @@
+server:
+  port: ${APP_PORT:8080}
+  shutdown: immediate
+  error.include-stacktrace: never
+
+springdoc:
+  show-actuator: true
+  swagger-ui.path: /api.html
+
+management:
+  endpoints.web.discovery.enabled: false
+  endpoint.health:
+    cache.time-to-live: 100ms
+    probes.enabled: true
+    show-details: always
+    show-components: always
+
+logging:
+  appender: ${LOGGING_APPENDERS:stdout}
+  root:
+    level: DEBUG
+  level:
+    com.sonet: DEBUG
+    #org.springframework: DEBUG
+
+spring:
+  application:
+    name: hl-sonet-post
+  redis:
+    database: 0
+    host: ${REDIS_HOST:localhost}
+    port: 6379
+    password:
+    timeout: 20000
+
+app:
+  jwt:
+    secret: megaTopSecret
+    expiration: 100500000
+    header: Authorization
+  redis:
+    cache:
+      bulk-update-size: 20
+      feed-size: 1000
+    topics:
+      post-create: post-create

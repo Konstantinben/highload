@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: v_1_2
+      author: kp
+      changes:
+        - tagDatabase:
+            tag: v_1_2
+        - sqlFile:
+            path: db/evolution/version/1.2/1_2_UP.sql
+      rollback:
+        - sqlFile:
+            path: db/evolution/version/1.2/1_2_DOWN.sql

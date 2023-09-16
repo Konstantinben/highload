@@ -24,7 +24,29 @@
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
         <aspectj.version>1.9.19</aspectj.version>
         <commons-collections4.version>4.4</commons-collections4.version>
+        <postgresql.jdbc.driver.version>42.6.0</postgresql.jdbc.driver.version>
+        <spring-cloud.version>2021.0.3</spring-cloud.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>luaj-repo</id>
+            <url>https://repository.cloudera.com/content/repositories/releases/</url>
+        </repository>
+    </repositories>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -54,6 +76,14 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-sleuth</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.aspectj</groupId>
@@ -75,7 +105,29 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>party.iroiro.luajava</groupId>
+            <artifactId>luajava</artifactId>
+            <version>3.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>party.iroiro.luajava</groupId>
+            <artifactId>lua53</artifactId>
+            <version>3.4.0</version>
+        </dependency>
+        <dependency>
+            <groupId>party.iroiro.luajava</groupId>
+            <artifactId>lua53-platform</artifactId>
+            <version>3.4.0</version>
+            <type>pom</type>
+        </dependency>
+        <dependency>
+            <groupId>party.iroiro.luajava</groupId>
+            <artifactId>luajit-platform</artifactId>
+            <version>3.4.0</version>
+            <type>pom</type>
         </dependency>
 
         <dependency>

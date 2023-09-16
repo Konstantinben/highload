@@ -1,0 +1,80 @@
+server:
+  port: ${APP_PORT:8080}
+  shutdown: immediate
+  error.include-stacktrace: never
+
+springdoc:
+  show-actuator: true
+  swagger-ui.path: /api.html
+
+management:
+  endpoints.web.discovery.enabled: false
+  endpoint.health:
+    cache.time-to-live: 100ms
+    probes.enabled: true
+    show-details: always
+    show-components: always
+
+logging:
+  appender: ${LOGGING_APPENDERS:stdout}
+  root:
+    level: DEBUG
+  level:
+    #    org.springframework.jdbc: DEBUG
+    com.sonet.dialog: DEBUG
+    Tracer: TRACE
+
+spring:
+  application:
+    name: hl-sonet-dialog
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    generate-ddl: false
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    database: postgresql
+    properties:
+      hibernate:
+        generate_statistics: false
+      jdbc:
+        batch_size: 100
+      order_inserts: true
+      order_updates: true
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:35432/postgres}
+    jdbc-url: ${DB_URL:jdbc:postgresql://localhost:35432/postgres}
+    username: ${DB_USER:postgres}
+    password: ${DB_PWD:pass}
+    driver-class-name: org.postgresql.Driver
+    # initialization-mode: always
+    hikari:
+      maximum-pool-size: ${DB_MAX_CONNECTIONS:100}
+      minimum-idle: ${DB_MIN_CONNECTIONS:3}
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/evolution/db.changelog-master.yaml
+    url: ${DB_URL:jdbc:postgresql://localhost:35432/postgres}
+    user: ${DB_USER:postgres}
+    password: ${DB_PWD:pass}
+  redis:
+    database: 0
+    host: localhost
+    port: 6379
+    password:
+    timeout: 20000
+
+app:
+  jwt:
+    secret: megaTopSecret
+    expiration: 100500000
+    header: Authorization
+  redis:
+    cache:
+      bulk-update-size: 20
+      feed-size: 1000
+    topics:
+      post-create: post-create
+  auth-service-uri: ${AUTH_SERVICE_URI:localhost:8080}
+  admin-user-email: admin@sonet.com
+  admin-user-uuid: 50109079-8dec-4847-868e-717c77deb881

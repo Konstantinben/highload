@@ -9,3 +9,7 @@ databaseChangeLog:
       file: db/evolution/changelog/v_1_3.yaml
   - include:
       file: db/evolution/changelog/v_1_4.yaml
+  - include:
+      file: db/evolution/changelog/v_1_5.yaml
+  - include:
+      file: db/evolution/changelog/v_1_6.yaml

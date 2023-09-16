@@ -221,7 +221,7 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/user/get/b49915c4-a791-4131-8e01-3ad62353b3a2",
+					"raw": "http://localhost:8080/user/get/30743755-47ce-4cea-9fb6-08f6e447a224",
 					"protocol": "http",
 					"host": [
 						"localhost"
@@ -230,7 +230,7 @@
 					"path": [
 						"user",
 						"get",
-						"b49915c4-a791-4131-8e01-3ad62353b3a2"
+						"30743755-47ce-4cea-9fb6-08f6e447a224"
 					]
 				}
 			},
@@ -398,6 +398,100 @@
 					],
 					"port": "8080",
 					"path": [
+						"dialog",
+						"237796c0-008e-4c98-bd49-19d14f8d6785",
+						"send"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "v1 /dialog/{uuid}/send Dialog Send",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "generated1@test.ru",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"message\": \"Hello 2\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8083/api/v1/dialog/237796c0-008e-4c98-bd49-19d14f8d6785/send",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8083",
+					"path": [
+						"api",
+						"v1",
+						"dialog",
+						"237796c0-008e-4c98-bd49-19d14f8d6785",
+						"send"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "v2 /dialog/{uuid}/send Dialog Send Copy",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "generated1@test.ru",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"message\": \"Hello 2\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:8083/api/v2/dialog/237796c0-008e-4c98-bd49-19d14f8d6785/send",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8083",
+					"path": [
+						"api",
+						"v2",
 						"dialog",
 						"237796c0-008e-4c98-bd49-19d14f8d6785",
 						"send"
@@ -597,23 +691,22 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "http://localhost:8080/dialog/884dfc75-bf94-4a44-bf4b-977ba1bc7d4b/get",
+					"raw": "http://localhost:8080/post/feed",
 					"protocol": "http",
 					"host": [
 						"localhost"
 					],
 					"port": "8080",
 					"path": [
-						"dialog",
-						"884dfc75-bf94-4a44-bf4b-977ba1bc7d4b",
-						"get"
+						"post",
+						"feed"
 					]
 				}
 			},
 			"response": []
 		},
 		{
-			"name": "/dialog/{uuid}/get Dialog Get Copy 2",
+			"name": "/dialog/{uuid}/get Dialog Get Copy",
 			"request": {
 				"auth": {
 					"type": "basic",
@@ -640,6 +733,82 @@
 					],
 					"port": "8080",
 					"path": [
+						"dialog",
+						"884dfc75-bf94-4a44-bf4b-977ba1bc7d4b",
+						"get"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "v2 /dialog/{uuid}/get Dialog Get Copy 2",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "generated2@test.ru",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8083/api/v2/dialog/884dfc75-bf94-4a44-bf4b-977ba1bc7d4b/get",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8083",
+					"path": [
+						"api",
+						"v2",
+						"dialog",
+						"884dfc75-bf94-4a44-bf4b-977ba1bc7d4b",
+						"get"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "v1 /dialog/{uuid}/get Dialog Get Copy 3",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "username",
+							"value": "generated2@test.ru",
+							"type": "string"
+						},
+						{
+							"key": "password",
+							"value": "password",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8083/api/v1/dialog/884dfc75-bf94-4a44-bf4b-977ba1bc7d4b/get",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8083",
+					"path": [
+						"api",
+						"v1",
 						"dialog",
 						"884dfc75-bf94-4a44-bf4b-977ba1bc7d4b",
 						"get"

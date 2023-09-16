@@ -21,7 +21,8 @@ logging:
     level: DEBUG
   level:
 #    org.springframework.jdbc: DEBUG
-    com.sonet: DEBUG
+    com.sonet.core: DEBUG
+    Tracer: TRACE
 
 spring:
   application:
@@ -84,3 +85,4 @@ app:
       feed-size: 1000
     topics:
       post-create: post-create
+  dialog-service-uri: ${DIALOG_SERVICE_URI:localhost:8083}

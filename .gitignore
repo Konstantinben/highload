@@ -10,3 +10,7 @@ target
 /volumes/pgshard2
 hw-3_replication
 /volumes/
+wrapper
+*.iml
+mvnw
+mvnw.cmd

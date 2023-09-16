@@ -126,6 +126,26 @@ services:
       - 12432:5432
     restart: unless-stopped
 
+  pgdialogs:
+    container_name:  pg-dialogs
+    image: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./volumes/pg-dialogs/:/var/lib/postgresql/data
+    networks:
+      - pgnet
+    ports:
+      - 35432:5432
+    restart: unless-stopped
+
 #  postgres-slave-1:
 #    container_name: pgslave
 #    image: postgres
@@ -206,9 +226,9 @@ services:
 #    links:
 #      - postgres-slave-2
 #      - prometheus
-
+#
   sonet-post:
-    image: 'kpolyanichko/hl-sonet-post-hw-7-amd64:latest'
+    image: 'kpolyanichko/hl-sonet-post-hw-9-amd64:latest'
     build:
       context: .
     container_name: app-post
@@ -222,7 +242,7 @@ services:
       - redisnet
 
   sonet-core:
-    image: 'kpolyanichko/hl-sonet-core-hw-7-amd64:latest'
+    image: 'kpolyanichko/hl-sonet-core-hw-9-amd64:latest'
     build:
       context: .
     container_name: app-core
@@ -236,6 +256,24 @@ services:
       - DB_READ_URL=jdbc:postgresql://postgres:5432/postgres
       - DB_PWD=pass
       - REDIS_HOST=redis
+      - DIALOG_SERVICE_URI=host.docker.internal:8083
     networks:
       - pgnet
       - redisnet
+
+  sonet-dialog:
+    image: 'kpolyanichko/hl-sonet-dialog-hw-9-amd64:latest'
+    build:
+      context: .
+    container_name: app-dialog
+    ports:
+      - 8083:8080
+    depends_on:
+      - postgres
+    environment:
+      - DB_URL=jdbc:postgresql://pgdialogs:5432/postgres
+      - DB_READ_URL=jdbc:postgresql://pgdialogs:5432/postgres
+      - DB_PWD=pass
+      - AUTH_SERVICE_URI=host.docker.internal:8080
+    networks:
+      - pgnet

@@ -2,6 +2,7 @@ package com.sonet.core.model;
 
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -20,8 +21,11 @@ public enum Role {
     }
 
     public Set<SimpleGrantedAuthority> getAuthorities() {
-        return getPermissions().stream()
+        Set<SimpleGrantedAuthority> result = new HashSet<>();
+        result.add(new SimpleGrantedAuthority("ROLE_" + this.name()));
+        result.addAll(getPermissions().stream()
                 .map(permission -> new SimpleGrantedAuthority(permission.getPermission()))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toSet()));
+        return result;
     }
 }

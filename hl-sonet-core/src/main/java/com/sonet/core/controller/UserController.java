@@ -7,7 +7,7 @@ import com.sonet.core.model.dto.UserCreatedDto;
 import com.sonet.core.model.dto.UserProfileDto;
 import com.sonet.core.model.entity.User;
 import com.sonet.core.model.mapper.UserMapper;
-import com.sonet.core.repository.UserReadRepository;
+import com.sonet.core.repository.UserReadOnlyRepository;
 import com.sonet.core.repository.UserRepository;
 import com.sonet.core.security.JwtTokenProvider;
 import com.sonet.core.security.UserSessionUtil;
@@ -50,7 +50,8 @@ public class UserController {
 
     private final UserSessionUtil userSessionUtil;
     private final UserRepository userRepository;
-    private final UserReadRepository userReadRepository;
+
+    private final UserReadOnlyRepository userReadOnlyRepository;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -62,7 +63,7 @@ public class UserController {
     @PostMapping("/register")
     @Operation(summary = "Зарегистрироваться")
     public UserCreatedDto signup(@RequestBody @Valid SignupRequestDto userSignupReq) {
-        userRepository.findByEmail(userSignupReq.getEmail()).ifPresent(
+        userReadOnlyRepository.findByEmail(userSignupReq.getEmail(), true).ifPresent(
                 existentUser -> {throw new RuntimeException("User " + userSignupReq.getEmail() + " already registered.");}
         );
 
@@ -110,8 +111,8 @@ public class UserController {
     @GetMapping ("/get/{uuid}")
     @Operation(summary = "Посмотреть профиль")
     public UserProfileDto getById(@PathVariable("uuid") UUID userId) {
-        return userReadRepository
-                .findByUuid(userId)
+        return userReadOnlyRepository
+                .findByUuid(userId, false)
                 .map(userMapper::toUserProfileDto)
                 .orElseThrow(() -> new BadCredentialsException("Cannod find user by " + userId));
     }
@@ -121,7 +122,7 @@ public class UserController {
     @Operation(summary = "Поиск анкет")
     public List<UserProfileDto> searchByName(@NotBlank @RequestParam("first_name") String firstName,
                                              @NotBlank @RequestParam("last_name") String lastName) {
-        List<UserProfileDto> result = userReadRepository
+        List<UserProfileDto> result = userReadOnlyRepository
                 .findLikeFirstAndLastNames(firstName.trim(), lastName.trim())
                 .stream()
                 .sorted(Comparator.comparingLong(User::getId))

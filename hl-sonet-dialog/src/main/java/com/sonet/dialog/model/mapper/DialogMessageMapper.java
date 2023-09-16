@@ -1,8 +1,8 @@
-package com.sonet.core.model.mapper;
+package com.sonet.dialog.model.mapper;
 
-import com.sonet.core.model.dto.DialogMessageDto;
-import com.sonet.core.model.entity.DialogMessage;
-import com.sonet.core.model.entity.User;
+import com.sonet.dialog.model.dto.DialogMessageDto;
+import com.sonet.dialog.model.entity.DialogMessage;
+import com.sonet.dialog.model.entity.User;
 import org.mapstruct.*;
 
 import java.util.List;

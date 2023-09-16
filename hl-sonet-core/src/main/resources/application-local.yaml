@@ -21,7 +21,8 @@ logging:
     level: DEBUG
   level:
 #    org.springframework.jdbc: DEBUG
-    com.sonet: DEBUG
+    com.sonet.core: DEBUG
+    Tracer: TRACE
 
 spring:
   application:
@@ -51,8 +52,10 @@ spring:
       maximum-pool-size: ${DB_MAX_CONNECTIONS:100}
       minimum-idle: ${DB_MIN_CONNECTIONS:3}
   datasource-readonly:
-    url: ${DB_URL:jdbc:postgresql://localhost:15432/postgres}
-    jdbc-url: ${DB_READ_URL:jdbc:postgresql://localhost:15432/postgres}
+    ##url: ${DB_URL:jdbc:postgresql://localhost:15432/postgres}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/postgres}
+    ##jdbc-url: ${DB_READ_URL:jdbc:postgresql://localhost:15432/postgres}
+    jdbc-url: ${DB_READ_URL:jdbc:postgresql://localhost:5432/postgres}
     username: ${DB_USER:postgres}
     password: ${DB_PWD:pass}
     driver-class-name: org.postgresql.Driver
@@ -84,3 +87,4 @@ app:
       feed-size: 1000
     topics:
       post-create: post-create
+  dialog-service-uri: ${DIALOG_SERVICE_URI:localhost:8083}

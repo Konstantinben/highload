@@ -6,7 +6,6 @@ import com.sonet.core.model.entity.User;
 import com.sonet.core.model.mapper.PostMapper;
 import com.sonet.core.repository.PostReadRepository;
 import com.sonet.core.repository.PostRepository;
-import com.sonet.core.repository.UserReadRepository;
 import com.sonet.core.security.UserSessionUtil;
 import com.sonet.core.service.RedisMessagePublisher;
 import com.sonet.core.service.RedisService;
@@ -19,7 +18,9 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Tag(name = "PostController", description = "Контроллер постов")
@@ -33,7 +34,7 @@ public class PostController {
     private final PostRepository postRepository;
 
     private final PostReadRepository postReadRepository;
-    private final UserReadRepository userReadRepository;
+    //private final UserReadRepository userReadRepository;
 
     private final PostMapper postMapper;
 

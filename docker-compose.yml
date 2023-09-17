@@ -6,26 +6,38 @@ networks:
 
 volumes:
   dumps:
+  grafana-data:
+  grafana:
+  prometheus:
+
 services:
-#  grafana:
-#    container_name: grafana
-#    image: grafana/grafana
-#    ports:
-#      - 3000:3000
-#    networks:
-#      - pgnet
-#      - redisnet
-#
-#  prometheus:
-#    container_name: prometheus
-#    image: prom/prometheus
-#    ports:
-#      - 9090:9090
-#    volumes:
-#      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
-#    networks:
-#      - pgnet
-#      - redisnet
+
+  grafana:
+    container_name: grafana
+    image: grafana/grafana
+    ports:
+      - 3000:3000
+    networks:
+      - pgnet
+      - redisnet
+    volumes:
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards/red.dashboard.json:/etc/grafana/provisioning/dashboards/main.json
+      - ./grafana/provisioning/dashboards:/var/lib/grafana/dashboards
+      - ./grafana-data:/var/lib/grafana
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - pgnet
+      - redisnet
+    depends_on:
+      - pgexp-pgmaster
 
   redis:
     container_name: redis
@@ -146,6 +158,25 @@ services:
       - 35432:5432
     restart: unless-stopped
 
+  pgzabbix:
+    container_name: pgzabbix
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: postgres
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./volumes/pgzabbix/:/var/lib/postgresql/data
+    networks:
+      - pgnet
+    ports:
+      - 45432:5432
+
 #  postgres-slave-1:
 #    container_name: pgslave
 #    image: postgres
@@ -189,19 +220,63 @@ services:
 #    ports:
 #      - 25432:5432
 #    restart: unless-stopped
-#
-#  postgres-exporter:
-#    container_name: pg-exporter
-#    image: prometheuscommunity/postgres-exporter
+
+  pgexp-pgmaster:
+    container_name: pgexp-pgmaster
+    image: prometheuscommunity/postgres-exporter
 #    ports:
 #      - 9187:9187
-#    environment:
-#      DATA_SOURCE_NAME: "postgresql://postgres:pass@postgres:5432/postgres?sslmode=disable"
-#    networks:
-#      - pgnet
-#    links:
-#      - postgres
-#      - prometheus
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:pass@postgres:5432/postgres?sslmode=disable"
+    networks:
+      - pgnet
+    links:
+      - postgres
+    depends_on:
+      - postgres
+        
+  pgexp-pgdialogs:
+    container_name: pgexp-pgdialogs
+    image: prometheuscommunity/postgres-exporter
+#    ports:
+#      - 19187:9187
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:pass@postgres:5432/postgres?sslmode=disable"
+    networks:
+      - pgnet
+    links:
+      - pgdialogs
+    depends_on:
+      - pgdialogs
+
+  pgexp-pgshard1:
+    container_name: pgexp-pgshard1
+    image: prometheuscommunity/postgres-exporter
+#    ports:
+#      - 19187:9187
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:pass@postgres:5432/postgres?sslmode=disable"
+    networks:
+      - pgnet
+    links:
+      - pgshard1
+    depends_on:
+      - pgshard1
+
+  pgexp-pgshard2:
+    container_name: pgexp-pgshard2
+    image: prometheuscommunity/postgres-exporter
+#    ports:
+#      - 19187:9187
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:pass@postgres:5432/postgres?sslmode=disable"
+    networks:
+      - pgnet
+    links:
+      - pgshard2
+    depends_on:
+      - pgshard2
+
 #  postgres-exporter-slave-1:
 #    container_name: pg-exporter-slave-1
 #    image: prometheuscommunity/postgres-exporter
@@ -228,7 +303,7 @@ services:
 #      - prometheus
 #
   sonet-post:
-    image: 'kpolyanichko/hl-sonet-post-hw-9-amd64:latest'
+    image: 'kpolyanichko/hl-sonet-post-hw-12-amd64:latest'
     build:
       context: .
     container_name: app-post
@@ -242,7 +317,7 @@ services:
       - redisnet
 
   sonet-core:
-    image: 'kpolyanichko/hl-sonet-core-hw-9-amd64:latest'
+    image: 'kpolyanichko/hl-sonet-core-hw-12-amd64:latest'
     build:
       context: .
     container_name: app-core
@@ -262,12 +337,14 @@ services:
       - redisnet
 
   sonet-dialog:
-    image: 'kpolyanichko/hl-sonet-dialog-hw-9-amd64:latest'
+    image: 'kpolyanichko/hl-sonet-dialog-hw-12-amd64:latest'
     build:
       context: .
     container_name: app-dialog
     ports:
       - 8083:8080
+      - 5000:5000
+      - "127.0.0.1:33083:33083"
     depends_on:
       - postgres
     environment:
@@ -275,5 +352,68 @@ services:
       - DB_READ_URL=jdbc:postgresql://pgdialogs:5432/postgres
       - DB_PWD=pass
       - AUTH_SERVICE_URI=host.docker.internal:8080
+      - JMX_PORT=33083
     networks:
       - pgnet
+
+  zabbix-server-pgsql:
+    image: zabbix/zabbix-server-pgsql:alpine-latest
+    container_name: zabbix-server-pgsql
+    ports:
+      - 10051:10051
+    environment:
+      - DB_SERVER_HOST=pgzabbix
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=postgres
+      - ZBX_JAVAGATEWAY=zabbix-java-gateway
+      - ZBX_JAVAGATEWAY_ENABLE=true
+      - ZBX_JAVAGATEWAYPORT=10052
+      - ZBX_STARTJAVAPOLLERS=5
+    depends_on:
+      - pgzabbix
+      - zabbix-java-gateway
+    networks:
+      - pgnet
+
+  zabbix-web-nginx-pgsql:
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-latest
+    container_name: zabbix-web-nginx-pgsql
+    environment:
+      - DB_SERVER_HOST=pgzabbix
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=postgres
+      - ZBX_SERVER_HOST=zabbix-server-pgsql
+    ports:
+      - '8585:8080'
+    depends_on:
+      - pgzabbix
+      - zabbix-server-pgsql
+      - zabbix-java-gateway
+    networks:
+      - pgnet
+
+
+  zabbix-java-gateway:
+    image: zabbix/zabbix-java-gateway:alpine-6.4-latest
+    ports:
+      - "10052:10052"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+#    env_file:
+#      - ./env_vars/.env_java
+    networks:
+      - pgnet
+    stop_grace_period: 5s
+    labels:
+      com.zabbix.description: "Zabbix Java Gateway"
+      com.zabbix.company: "Zabbix LLC"
+      com.zabbix.component: "java-gateway"
+      com.zabbix.os: "alpine"

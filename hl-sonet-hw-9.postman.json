@@ -77,13 +77,13 @@
 					"type": "basic",
 					"basic": [
 						{
-							"key": "username",
-							"value": "new2@new.ru",
+							"key": "password",
+							"value": "password",
 							"type": "string"
 						},
 						{
-							"key": "password",
-							"value": "new2",
+							"key": "username",
+							"value": "generated44@test.ru",
 							"type": "string"
 						}
 					]
@@ -92,7 +92,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{\r\n    \"firstName\": \"new2\",\r\n    \"lastName\": \"newoff2\",\r\n    \"birthdate\": \"2017-02-01\",\r\n    \"gender\": \"M\",\r\n    \"city\": \"SPB\",\r\n    \"biography\": \"lalala\"\r\n}",
+					"raw": "{\r\n    \"birthdate\": \"2017-02-03\",\r\n    \"gender\": \"F\",\r\n    \"biography\": \"tatata\"\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"

@@ -1,4 +1,4 @@
-# ДЗ 9 Разделение монолита на микросервисы
+# ДЗ 12 Мониторинг
 
 #### Highloaded Social Network
 
@@ -7,24 +7,35 @@
 - заходим в корень проекта
 - запускаем docker-compose up
 - докер скачивает образы Postgres, Maven, Java-17, билдит артефакт Springboot приложения и запускает его на http://localhost:8080. Сервис вебсокетов запускается на http://localhost:8082.
+- для наблюдения мониторинга в графану `http://localhost:3000` нужно импортировать дашборд `./hl-sonet-hw-9.postman.json`
 
-## Описание изменений
-1. Выделен отдельный микросервис для диалогов, его API: <br/>
-- **http://localhost:8083/api/v1/dialog**  - этот эндпоинт для обработки запросов со старого АПИ, которые досутпны по старому адресу **http://localhost:8080/dialog**
-- **http://localhost:8083/api/v2/dialog** - это новое API
-2. Общение между микросервисами безопасно и организовано на REST. Отдельный Auth service не выделял (хотя он уже нужен), но сделал Auth эндпоинт, на который может ходить только администратор, занесенный в БД. Межсервисное общение осуществляется секьюрно с JWT токеном администратора.
-3. Базы микросервисов разделены
-4. Для сервисов core и dialog добавлены максимально подробные логи Input/Output, содержащие traceId. На входе/выхода REST эндпоинтов и REST клиентов логируется запрос и отправляемые данные. Такие подробные и тяжелые логи включены для иллюстрации. Аггрегаторов логов или трейсов не добавлял, поскольку это не требовалось в задании.
+## Описание проделанной работы
+1. Добавлены grafana, prometheus
+2. Подготовлены метрики по принципу RED. Отдельно для каждого урла. Ниже примеры prometheus queries для сбора метрик
+- **RPC**
+- `sum(rate(http_server_requests_seconds_count{uri!~"/actuator/prometheus"}[1m]))` - общая
+- `sum(rate(http_server_requests_seconds_count{uri!~"/actuator/prometheus"}[1m])) by (method, uri, instance)` - с разбивкой по эндпоинтам и сервисам
+- **Errors** - отношение ошибочных к успешным запросам
+- `sum(increase(http_server_requests_seconds_count{uri!="/actuator/prometheus", status=~"4.+|5.+"}[1m])) / sum(increase(http_server_requests_seconds_count{uri!="/actuator/prometheus"}[1m]))`
+- **Duration** - cделаны для каждого эндпоинта индивидуально, ниже пример для одного эндпоинта. Можно конечно не разбивать по uri, но я не вижу смысла в такой диаграмме
+- `rate(http_server_requests_seconds_sum{uri="/dialog/{toUuid}/get"}[1m]) / rate(http_server_requests_seconds_count{uri="/dialog/{toUuid}/get"}[1m])`
+3. Созданный дашбоард можно найти в ***./hw-12_report/red.dashboard.json***
+4. Проведено нагрузочное тестирование при котором некоторые запросы гарантировано ошибочны (падает авторизация). Использовалась postman коллекция запросов `./hl-sonet-hw-9.postman.json` Графики RED дашбоарда представлены ниже:
+![img.png](img.png)
+![img_1.png](img_1.png)
+![img_2.png](img_2.png)
+![img_3.png](img_3.png)
+5. К сожалению не могу показать Zabbix. JMX порт выставлен в java в java приложении в докере. JMX мониторинг сирвиса диалогов нормально работает в любом другом приложении к примеру JConsole или Java Mission Control. Но в zabbix успеха я не добился.
 
 
 ## Использование приложения
-- **отправить сообщению пользователю [Basic/JWT] POST http://localhost:8080/dialog/<user-UUID>/send**
-- **отправить сообщению пользователю [Basic/JWT] POST http://localhost:8083/api/v1/dialog/<user-UUID>/send**
-- **отправить сообщению пользователю [Basic/JWT] POST http://localhost:8080/dialog/<user-UUID>/send**
+- отправить сообщению пользователю [Basic/JWT] POST http://localhost:8080/dialog/<user-UUID>/send
+- отправить сообщению пользователю [Basic/JWT] POST http://localhost:8083/api/v1/dialog/<user-UUID>/send
+- отправить сообщению пользователю [Basic/JWT] POST http://localhost:8080/dialog/<user-UUID>/send
   <br/><br/>
-- **посмотреть диалог с пользователем [Basic/JWT] http://localhost:8083/api/v2/dialog/<user-UUID>/get**
-- **посмотреть диалог с пользователем [Basic/JWT] POST http://localhost:8083/api/v1/dialog/<user-UUID>/get**
-- **посмотреть диалог с пользователем [Basic/JWT] POST http://localhost:8083/api/v2/dialog/<user-UUID>/get**
+- посмотреть диалог с пользователем [Basic/JWT] http://localhost:8083/api/v2/dialog/<user-UUID>/get
+- посмотреть диалог с пользователем [Basic/JWT] POST http://localhost:8083/api/v1/dialog/<user-UUID>/get
+- посмотреть диалог с пользователем [Basic/JWT] POST http://localhost:8083/api/v2/dialog/<user-UUID>/get
   <br/><br/>
 - регистрация: POST http://localhost:8080/user/update - достаточно email, firstname, password
 - логин: POST http://localhost:8080/user/login - выдает JWT token
@@ -39,20 +50,30 @@
 - JWT возвращается при логине, его так прямо и нужно скопипастить в параметр урла страницы <br/>
 - Подписаться можно только на свой канал, при попытках подписаться на чужой получите ошибку, вебсокет закроется<br/>
 
+#### Grafana
+- **http://localhost:3000**
+
+#### Prometheus
+- **http://localhost:9090**
 
 #### Swagger UI приложения 
 Пока что не поддерживает аутентификацию, доступен по адресу<br/>
 - **http://localhost:8080/swagger-ui/index.html**
 - **http://localhost:8083/swagger-ui/index.html**
+- **http://localhost:8082/swagger-ui/index.html** - тут только /actuator эндпоинты
 
 #### Redis Comander
-http://localhost:8081/ <br/>
+**http://localhost:8081/** <br/>
 Логин / пароль : root / qwerty
 
 #### **Пояснения по поводу имплементации**
 Посты попадают в очередь событий сделанную на основе Redis Pub-Sub <br/>
 Вебсокеты на основе SockJS и Stomp протокола. Серверная часть - SpringBoot<br/>
-Для вебсокетов создан отдельный микросервис. Подъем новыъ инстансов позволит масштабировать количество одновременно обслуживаемых вебсокетов.<br/>
+Для вебсокетов и диалогов созданы отдельные микросервисы. <br/>
 <br/>
-Пример страницы: <br/>
+Пример страницы для прослушивания вебсокета (нужно открыть консоль): <br/>
 http://localhost:8082/?uuid=884dfc75-bf94-4a44-bf4b-977ba1bc7d4b&token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJnZW5lcmF0ZWQxQHRlc3QucnUiLCJyb2xlIjoiVVNFUiIsInV1aWQiOiI4ODRkZmM3NS1iZjk0LTRhNDQtYmY0Yi05NzdiYTFiYzdkNGIiLCJpYXQiOjE2OTQwMjkwNzYsImV4cCI6MTY5NDEyOTU3Nn0.79JiVAVNuoQGGcXxP0INtJSkJyvWEuxNmRs4GjNMrKg
+
+
+
+- https://github.com/mjp91/zabbix-spring-boot-actuator

@@ -27,6 +27,7 @@
 		<commons-collections4.version>4.4</commons-collections4.version>
 		<postgresql.jdbc.driver.version>42.6.0</postgresql.jdbc.driver.version>
 		<spring-cloud.version>2021.0.3</spring-cloud.version>
+		<micrometer-registry-prometheus.version>1.11.3</micrometer-registry-prometheus.version>
 	</properties>
 
 	<dependencyManagement>
@@ -87,6 +88,23 @@
 		</dependency>
 
 		<dependency>
+			<groupId>io.micrometer</groupId>
+			<artifactId>micrometer-registry-prometheus</artifactId>
+			<version>${micrometer-registry-prometheus.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.aspectj</groupId>
+			<artifactId>aspectjrt</artifactId>
+			<version>${aspectj.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+		</dependency>
+
+		<dependency>
 			<groupId>io.swagger.core.v3</groupId>
 			<artifactId>swagger-annotations</artifactId>
 			<version>${swagger-annotations.version}</version>
@@ -130,11 +148,6 @@
 		<dependency>
 			<groupId>org.liquibase</groupId>
 			<artifactId>liquibase-core</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.postgresql</groupId>
-			<artifactId>postgresql</artifactId>
 		</dependency>
 	</dependencies>
 

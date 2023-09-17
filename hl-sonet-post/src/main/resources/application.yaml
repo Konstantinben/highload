@@ -8,12 +8,31 @@ springdoc:
   swagger-ui.path: /api.html
 
 management:
-  endpoints.web.discovery.enabled: false
-  endpoint.health:
-    cache.time-to-live: 100ms
-    probes.enabled: true
-    show-details: always
-    show-components: always
+  security:
+    enabled: false
+  endpoints:
+    web:
+      discovery:
+        enabled: false
+      exposure:
+        include: prometheus, metrics, info, health
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    distribution:
+      percentiles-histogram:
+        "[http.server.requests]": true
+  endpoint:
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+    health:
+      cache.time-to-live: 100ms
+      probes.enabled: true
+      show-details: always
+      show-components: always
 
 logging:
   appender: ${LOGGING_APPENDERS:stdout}

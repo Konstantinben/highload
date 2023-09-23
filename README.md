@@ -1,4 +1,4 @@
-# ДЗ 12 Мониторинг
+# ДЗ 8 Применение tarantool'а как хранилища
 
 #### Highloaded Social Network
 
@@ -7,26 +7,39 @@
 - заходим в корень проекта
 - запускаем docker-compose up
 - докер скачивает образы Postgres, Maven, Java-17, билдит артефакт Springboot приложения и запускает его на http://localhost:8080. Сервис вебсокетов запускается на http://localhost:8082.
-- для наблюдения мониторинга в графану `http://localhost:3000` нужно импортировать дашборд `./hl-sonet-hw-9.postman.json`
+- заходим в контейнер tarantool-simple и создаем схему БД и хранимые процедуры см. ```/opt/tarantool/scripts.lua ``` (```./tartantool/scripts.lua``` из корня проекта).
 
-## Описание проделанной работы
-1. Добавлены grafana, prometheus
-2. Подготовлены метрики по принципу RED. Отдельно для каждого урла. Ниже примеры prometheus queries для сбора метрик
-- **RPC**
-- `sum(rate(http_server_requests_seconds_count{uri!~"/actuator/prometheus"}[1m]))` - общая
-- `sum(rate(http_server_requests_seconds_count{uri!~"/actuator/prometheus"}[1m])) by (method, uri, instance)` - с разбивкой по эндпоинтам и сервисам
-- **Errors** - отношение ошибочных к успешным запросам
-- `sum(increase(http_server_requests_seconds_count{uri!="/actuator/prometheus", status=~"4.+|5.+"}[1m])) / sum(increase(http_server_requests_seconds_count{uri!="/actuator/prometheus"}[1m]))`
-- **Duration** - cделаны для каждого эндпоинта индивидуально, ниже пример для одного эндпоинта. Можно конечно не разбивать по uri, но я не вижу смысла в такой диаграмме
-- `rate(http_server_requests_seconds_sum{uri="/dialog/{toUuid}/get"}[1m]) / rate(http_server_requests_seconds_count{uri="/dialog/{toUuid}/get"}[1m])`
-3. Созданный дашбоард можно найти в ***./hw-12_report/red.dashboard.json***
-4. Проведено нагрузочное тестирование при котором некоторые запросы гарантировано ошибочны (падает авторизация). Использовалась postman коллекция запросов `./hl-sonet-hw-9.postman.json` Графики RED дашбоарда представлены ниже:
-![img.png](img.png)
-![img_1.png](img_1.png)
-![img_2.png](img_2.png)
-![img_3.png](img_3.png)
-5. К сожалению не могу показать Zabbix. JMX порт выставлен в java в java приложении в докере. JMX мониторинг сирвиса диалогов нормально работает в любом другом приложении к примеру JConsole или Java Mission Control. Но в zabbix успеха я не добился.
 
+## Результаты нагрузочного тестирования
+1. Тестирование с сохранением диалогов в ***Postgre SQL***
+- Производилось на пустой базе диалогов
+- Конфигурация тестов (на грани, одна ошибка проскочила. Выше уже растет кол-во ошибок)
+![img_4.png](img_4.png)
+- RPC
+![img_5.png](img_5.png)
+- Latency
+![img_6.png](img_6.png)
+- Сводная таблица
+![img_7.png](img_7.png)
+2. Тестирование с сохранением диалогов в ***Tarantool***
+- Производилось на пустом спейсе. Первоначальное тестирование показала высокий процент ошибок из-за того, что был выбран индекс Date + keyhash и множество записей создавалось в ту же самую милисекунду. Пропускная способность стала очень высокой. После добавления в индекс UUID на последнюю позицию, ситуация поменялась и пропускная способность понизилась, ошибки пропали.
+- первоначальный индекс tarantool
+```lua
+box.space.dialog_messages:create_index('key_hash_created_date_idx', { type = "TREE", unique = true, parts = { 2, 'number', 6, 'string' }, if_not_exists = true })
+```
+- новый индекс tarantool
+```lua
+box.space.dialog_messages:create_index('key_hash_created_date_idx', { type = "TREE", unique = true, parts = { 2, 'number', 6, 'string', 1, 'uuid'}, if_not_exists = true })
+```
+- Конфигурация тестов - при той же конфигурации ошибок не было
+- RPC
+![img_11.png](img_11.png)
+- Latency
+![img_12.png](img_12.png)
+- Сводная таблица
+![img_13.png](img_13.png)
+3. Выводы
+В Tarantool при использовании такого же индекса, как и в Postre SQL наблюдался резкий рост RPC, что создало большое количесво ошибок. При усложнении структуры индекса все показатели приблизились к Postgre SQL. При этом в Tarantool не было ошибок и пики RPC были выше.
 
 ## Использование приложения
 - отправить сообщению пользователю [Basic/JWT] POST http://localhost:8080/dialog/<user-UUID>/send
@@ -73,7 +86,3 @@
 <br/>
 Пример страницы для прослушивания вебсокета (нужно открыть консоль): <br/>
 http://localhost:8082/?uuid=884dfc75-bf94-4a44-bf4b-977ba1bc7d4b&token=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJnZW5lcmF0ZWQxQHRlc3QucnUiLCJyb2xlIjoiVVNFUiIsInV1aWQiOiI4ODRkZmM3NS1iZjk0LTRhNDQtYmY0Yi05NzdiYTFiYzdkNGIiLCJpYXQiOjE2OTQwMjkwNzYsImV4cCI6MTY5NDEyOTU3Nn0.79JiVAVNuoQGGcXxP0INtJSkJyvWEuxNmRs4GjNMrKg
-
-
-
-- https://github.com/mjp91/zabbix-spring-boot-actuator

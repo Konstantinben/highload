@@ -69,6 +69,13 @@ spring:
     hikari:
       maximum-pool-size: ${DB_MAX_CONNECTIONS:100}
       minimum-idle: ${DB_MIN_CONNECTIONS:3}
+  tarantool:
+    jdbc-url: ${TARANTOOL_JDBC_URL:jdbc:tarantool://localhost:3301?user=tarantool&password=pass}
+    host: ${TARANTOOL_HOST:localhost}
+    port: ${TARANTOOL_PORT:3301}
+    username: ${TARANTOOL_USERNAME:guest}
+    password:
+
   liquibase:
     enabled: true
     change-log: classpath:/db/evolution/db.changelog-master.yaml

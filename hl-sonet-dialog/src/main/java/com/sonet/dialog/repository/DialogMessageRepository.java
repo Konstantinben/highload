@@ -7,11 +7,14 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface DialogMessageRepository extends CrudRepository<DialogMessage, UUID> {
 
     List<DialogMessage> getByKeyHashOrderByCreatedDateDesc(int keyHash);
+
+    Optional<DialogMessage> getFirstByKeyHashOrderByCreatedDateDesc(int keyHash);
 
     @Modifying
     @Query("""

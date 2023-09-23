@@ -158,24 +158,24 @@ services:
       - 35432:5432
     restart: unless-stopped
 
-  pgzabbix:
-    container_name: pgzabbix
-    image: postgres:14-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: pass
-      POSTGRES_DB: postgres
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - ./volumes/pgzabbix/:/var/lib/postgresql/data
-    networks:
-      - pgnet
-    ports:
-      - 45432:5432
+#  pgzabbix:
+#    container_name: pgzabbix
+#    image: postgres:14-alpine
+#    environment:
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: pass
+#      POSTGRES_DB: postgres
+#    healthcheck:
+#      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#    volumes:
+#      - ./volumes/pgzabbix/:/var/lib/postgresql/data
+#    networks:
+#      - pgnet
+#    ports:
+#      - 45432:5432
 
 #  postgres-slave-1:
 #    container_name: pgslave
@@ -302,6 +302,18 @@ services:
 #      - postgres-slave-2
 #      - prometheus
 #
+  tarantool:
+    image: kpolyanichko/tarantool-simple:latest
+    container_name: "tarantool-simple"
+#    command: tarantoolctl connect 3301 && tarantool /opt/tarantool/init.lua
+    networks:
+      - pgnet
+    ports:
+      - 3301:3301
+    volumes:
+      - ./tarantool/init.lua:/opt/tarantool/init.lua
+      - ./tarantool/scripts.lua:/opt/tarantool/scripts.lua
+
   sonet-post:
     image: 'kpolyanichko/hl-sonet-post-hw-12-amd64:latest'
     build:
@@ -337,7 +349,7 @@ services:
       - redisnet
 
   sonet-dialog:
-    image: 'kpolyanichko/hl-sonet-dialog-hw-12-amd64:latest'
+    image: 'kpolyanichko/hl-sonet-dialog-hw-8-amd64:latest'
     build:
       context: .
     container_name: app-dialog
@@ -353,67 +365,8 @@ services:
       - DB_PWD=pass
       - AUTH_SERVICE_URI=host.docker.internal:8080
       - JMX_PORT=33083
+      - TARANTOOL_HOST=tarantool
+      - TARANTOOL_PORT=3301
+      - TARANTOOL_USERNAME=guest
     networks:
       - pgnet
-
-  zabbix-server-pgsql:
-    image: zabbix/zabbix-server-pgsql:alpine-latest
-    container_name: zabbix-server-pgsql
-    ports:
-      - 10051:10051
-    environment:
-      - DB_SERVER_HOST=pgzabbix
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=pass
-      - POSTGRES_DB=postgres
-      - ZBX_JAVAGATEWAY=zabbix-java-gateway
-      - ZBX_JAVAGATEWAY_ENABLE=true
-      - ZBX_JAVAGATEWAYPORT=10052
-      - ZBX_STARTJAVAPOLLERS=5
-    depends_on:
-      - pgzabbix
-      - zabbix-java-gateway
-    networks:
-      - pgnet
-
-  zabbix-web-nginx-pgsql:
-    image: zabbix/zabbix-web-nginx-pgsql:alpine-latest
-    container_name: zabbix-web-nginx-pgsql
-    environment:
-      - DB_SERVER_HOST=pgzabbix
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=pass
-      - POSTGRES_DB=postgres
-      - ZBX_SERVER_HOST=zabbix-server-pgsql
-    ports:
-      - '8585:8080'
-    depends_on:
-      - pgzabbix
-      - zabbix-server-pgsql
-      - zabbix-java-gateway
-    networks:
-      - pgnet
-
-
-  zabbix-java-gateway:
-    image: zabbix/zabbix-java-gateway:alpine-6.4-latest
-    ports:
-      - "10052:10052"
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-#    env_file:
-#      - ./env_vars/.env_java
-    networks:
-      - pgnet
-    stop_grace_period: 5s
-    labels:
-      com.zabbix.description: "Zabbix Java Gateway"
-      com.zabbix.company: "Zabbix LLC"
-      com.zabbix.component: "java-gateway"
-      com.zabbix.os: "alpine"

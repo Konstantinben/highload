@@ -1,0 +1,114 @@
+{
+	"info": {
+		"_postman_id": "51b85d1f-29ad-4e70-8b97-fe93843bf6a2",
+		"name": "hl-sonet Nginx Load Tests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "5562917"
+	},
+	"item": [
+		{
+			"name": "/user/get/{uuid} User 2 Profile",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:80/app//user/get/81b3dfd8-f67a-46f9-a7d0-35acc1ac2729",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "80",
+					"path": [
+						"app",
+						"",
+						"user",
+						"get",
+						"81b3dfd8-f67a-46f9-a7d0-35acc1ac2729"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/user/get/{uuid} User 2 Profile Copy",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:80/app//user/get/81b3dfd8-f67a-46f9-a7d0-35acc1ac2729",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "80",
+					"path": [
+						"app",
+						"",
+						"user",
+						"get",
+						"81b3dfd8-f67a-46f9-a7d0-35acc1ac2729"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/user/get/{uuid} User 1 Profile",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:80/app//user/get/130e83fd-6891-48ff-9349-5f6c7e90d131",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "80",
+					"path": [
+						"app",
+						"",
+						"user",
+						"get",
+						"130e83fd-6891-48ff-9349-5f6c7e90d131"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/user/get/{uuid} User 1 Profile Copy",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:80/app//user/get/130e83fd-6891-48ff-9349-5f6c7e90d131",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "80",
+					"path": [
+						"app",
+						"",
+						"user",
+						"get",
+						"130e83fd-6891-48ff-9349-5f6c7e90d131"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

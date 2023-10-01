@@ -2,7 +2,9 @@ version: '3.5'
 
 networks:
   pgnet:
+  monitoring:
   redisnet:
+  appnet:
 
 volumes:
   dumps:
@@ -12,6 +14,37 @@ volumes:
 
 services:
 
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+#      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - appnet
+    depends_on:
+      - sonet-core-3
+      - sonet-core-2
+      - sonet-core-1
+      - sonet-post
+      - sonet-dialog
+
+  haproxy:
+    image: haproxy:latest
+    container_name: haproxy
+    restart: always
+    depends_on:
+      - pgslave-1
+      - pgslave-2
+      - pgslave-3
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+    networks:
+      - pgnet
+
   grafana:
     container_name: grafana
     image: grafana/grafana
@@ -20,6 +53,7 @@ services:
     networks:
       - pgnet
       - redisnet
+      - monitoring
     volumes:
       - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
       - ./grafana/provisioning/dashboards/red.dashboard.json:/etc/grafana/provisioning/dashboards/main.json
@@ -36,6 +70,7 @@ services:
     networks:
       - pgnet
       - redisnet
+      - monitoring
     depends_on:
       - pgexp-pgmaster
 
@@ -67,8 +102,117 @@ services:
     depends_on:
       - redis
 
-  postgres:
-    container_name: pgmaster
+  pgmaster-0:
+    container_name: pgmaster-0
+    image: docker.io/bitnami/postgresql-repmgr:14.9.0
+    ports:
+      - "6432:5432"
+    volumes:
+      - ./volumes/pgmaster-0:/bitnami/postgresql
+      - ./dumps/test.sql:/docker-entrypoint-initdb.d/test.sql:ro
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=adminpgpwd4habr
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=pass
+      - POSTGRESQL_DATABASE=postgres
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pgmaster-0
+      - REPMGR_PRIMARY_PORT=5432
+      - REPMGR_PARTNER_NODES=pgmaster-0,pgslave-1:5432,pgslave-2:5432
+      - REPMGR_NODE_NAME=pgmaster-0
+      - REPMGR_NODE_NETWORK_NAME=pgmaster-0
+      - REPMGR_PORT_NUMBER=5432
+      - REPMGR_CONNECT_TIMEOUT=1
+      - REPMGR_RECONNECT_ATTEMPTS=2
+      - REPMGR_RECONNECT_INTERVAL=1
+      - REPMGR_MASTER_RESPONSE_TIMEOUT=5
+    restart: unless-stopped
+    networks:
+      - pgnet
+
+  pgslave-1:
+    container_name: pgslave-1
+    image: docker.io/bitnami/postgresql-repmgr:14.9.0
+    ports:
+      - "6433:5432"
+    volumes:
+      - ./volumes/pgslave-1:/bitnami/postgresql
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=adminpgpwd4habr
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=pass
+      - POSTGRESQL_DATABASE=postgres
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pgmaster-0
+      - REPMGR_PRIMARY_PORT=5432
+      - REPMGR_PARTNER_NODES=pgmaster-0,pgslave-1:5432,pgslave-2:5432,pgslave-3:5432
+      - REPMGR_NODE_NAME=pgslave-1
+      - REPMGR_NODE_NETWORK_NAME=pgslave-1
+      - REPMGR_PORT_NUMBER=5432
+      - REPMGR_CONNECT_TIMEOUT=1
+      - REPMGR_RECONNECT_ATTEMPTS=2
+      - REPMGR_RECONNECT_INTERVAL=1
+      - REPMGR_MASTER_RESPONSE_TIMEOUT=5
+    restart: unless-stopped
+    networks:
+      - pgnet
+
+  pgslave-2:
+    container_name: pgslave-2
+    image: docker.io/bitnami/postgresql-repmgr:14.9.0
+    ports:
+      - "6434:5432"
+    volumes:
+      - ./volumes/pgslave-2:/bitnami/postgresql
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=adminpgpwd4habr
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=pass
+      - POSTGRESQL_DATABASE=postgres
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pgmaster-0
+      - REPMGR_PRIMARY_PORT=5432
+      - REPMGR_PARTNER_NODES=pgmaster-0,pgslave-1:5432,pgslave-2:5432,pgslave-3:5432
+      - REPMGR_NODE_NAME=pgslave-2
+      - REPMGR_NODE_NETWORK_NAME=pgslave-2
+      - REPMGR_PORT_NUMBER=5432
+      - REPMGR_CONNECT_TIMEOUT=1
+      - REPMGR_RECONNECT_ATTEMPTS=2
+      - REPMGR_RECONNECT_INTERVAL=1
+      - REPMGR_MASTER_RESPONSE_TIMEOUT=5
+    restart: unless-stopped
+    networks:
+      - pgnet
+
+  pgslave-3:
+    container_name: pgslave-3
+    image: docker.io/bitnami/postgresql-repmgr:14.9.0
+    ports:
+      - "6435:5432"
+    volumes:
+      - ./volumes/pgslave-3:/bitnami/postgresql
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=adminpgpwd4habr
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=pass
+      - POSTGRESQL_DATABASE=postgres
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pgmaster-0
+      - REPMGR_PRIMARY_PORT=5432
+      - REPMGR_PARTNER_NODES=pgmaster-0,pgslave-1:5432,pgslave-2:5432,pgslave-3:5432
+      - REPMGR_NODE_NAME=pgslave-3
+      - REPMGR_NODE_NETWORK_NAME=pgslave-3
+      - REPMGR_PORT_NUMBER=5432
+      - REPMGR_CONNECT_TIMEOUT=1
+      - REPMGR_RECONNECT_ATTEMPTS=2
+      - REPMGR_RECONNECT_INTERVAL=1
+      - REPMGR_MASTER_RESPONSE_TIMEOUT=5
+    restart: unless-stopped
+    networks:
+      - pgnet
+
+  pgdialogs:
+    container_name: pg-dialogs
     image: postgres
     environment:
       POSTGRES_USER: postgres
@@ -80,18 +224,12 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - ./volumes/pgmaster/:/var/lib/postgresql/data
+      - ./volumes/pg-dialogs/:/var/lib/postgresql/data
     networks:
       - pgnet
-    expose:
-      - 5432
     ports:
-      - 5432:5432
+      - 35432:5432
     restart: unless-stopped
-    depends_on:
-      - pgshard1
-      - pgshard2
-
   pgshard1:
     container_name: pgshard1
     image: postgres
@@ -138,102 +276,20 @@ services:
       - 12432:5432
     restart: unless-stopped
 
-  pgdialogs:
-    container_name:  pg-dialogs
-    image: postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: pass
-      POSTGRES_DB: postgres
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - ./volumes/pg-dialogs/:/var/lib/postgresql/data
-    networks:
-      - pgnet
-    ports:
-      - 35432:5432
-    restart: unless-stopped
-
-  pgzabbix:
-    container_name: pgzabbix
-    image: postgres:14-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: pass
-      POSTGRES_DB: postgres
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - ./volumes/pgzabbix/:/var/lib/postgresql/data
-    networks:
-      - pgnet
-    ports:
-      - 45432:5432
-
-#  postgres-slave-1:
-#    container_name: pgslave
-#    image: postgres
-#    environment:
-#      POSTGRES_USER: postgres
-#      POSTGRES_PASSWORD: pass
-#      POSTGRES_DB: postgres
-#    healthcheck:
-#      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
-#    volumes:
-#      - ./volumes/pgslave/:/var/lib/postgresql/data
-#    networks:
-#      - pgnet
-#    expose:
-#      - 15432
-#    ports:
-#      - 15432:5432
-#    restart: unless-stopped
-#
-#  postgres-slave-2:
-#    container_name: pgslave2
-#    image: postgres
-#    environment:
-#      POSTGRES_USER: postgres
-#      POSTGRES_PASSWORD: pass
-#      POSTGRES_DB: postgres
-#    healthcheck:
-#      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
-#    volumes:
-#      - ./volumes/pgslave2/:/var/lib/postgresql/data
-#    networks:
-#      - pgnet
-#    expose:
-#      - 25432
-#    ports:
-#      - 25432:5432
-#    restart: unless-stopped
-
   pgexp-pgmaster:
     container_name: pgexp-pgmaster
     image: prometheuscommunity/postgres-exporter
 #    ports:
 #      - 9187:9187
     environment:
-      DATA_SOURCE_NAME: "postgresql://postgres:pass@postgres:5432/postgres?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://postgres:pass@pgmaster-0:5432/postgres?sslmode=disable"
     networks:
       - pgnet
+      - monitoring
     links:
-      - postgres
+      - pgmaster-0
     depends_on:
-      - postgres
+      - pgmaster-0
         
   pgexp-pgdialogs:
     container_name: pgexp-pgdialogs
@@ -241,9 +297,10 @@ services:
 #    ports:
 #      - 19187:9187
     environment:
-      DATA_SOURCE_NAME: "postgresql://postgres:pass@postgres:5432/postgres?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://postgres:pass@pgdialogs:5432/postgres?sslmode=disable"
     networks:
       - pgnet
+      - monitoring
     links:
       - pgdialogs
     depends_on:
@@ -255,9 +312,10 @@ services:
 #    ports:
 #      - 19187:9187
     environment:
-      DATA_SOURCE_NAME: "postgresql://postgres:pass@postgres:5432/postgres?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://postgres:pass@pgshard1:5432/postgres?sslmode=disable"
     networks:
       - pgnet
+      - monitoring
     links:
       - pgshard1
     depends_on:
@@ -269,39 +327,45 @@ services:
 #    ports:
 #      - 19187:9187
     environment:
-      DATA_SOURCE_NAME: "postgresql://postgres:pass@postgres:5432/postgres?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://postgres:pass@pgshard2:5432/postgres?sslmode=disable"
     networks:
       - pgnet
+      - monitoring
     links:
       - pgshard2
     depends_on:
       - pgshard2
 
-#  postgres-exporter-slave-1:
-#    container_name: pg-exporter-slave-1
-#    image: prometheuscommunity/postgres-exporter
+  pgexp-pgslave1:
+    container_name: pgexp-pgslave1
+    image: prometheuscommunity/postgres-exporter
 #    ports:
 #      - 19187:9187
-#    environment:
-#      DATA_SOURCE_NAME: "postgresql://postgres:pass@postgres-slave-1:15432/postgres?sslmode=disable"
-#    networks:
-#      - pgnet
-#    links:
-#      - postgres-slave-1
-#      - prometheus
-#  postgres-exporter-slave-2:
-#    container_name: pg-exporter-slave-2
-#    image: prometheuscommunity/postgres-exporter
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:pass@pgslave-1:5432/postgres?sslmode=disable"
+    networks:
+      - pgnet
+      - monitoring
+    links:
+      - pgslave-1
+    depends_on:
+      - pgslave-1
+
+  pgexp-pgslave2:
+    container_name: pgexp-pgslave2
+    image: prometheuscommunity/postgres-exporter
 #    ports:
 #      - 29187:9187
-#    environment:
-#      DATA_SOURCE_NAME: "postgresql://postgres:pass@postgres-slave-2:25432/postgres?sslmode=disable"
-#    networks:
-#      - pgnet
-#    links:
-#      - postgres-slave-2
-#      - prometheus
-#
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:pass@pgslave-2:5432/postgres?sslmode=disable"
+    networks:
+      - pgnet
+      - monitoring
+    links:
+      - pgslave-2
+    depends_on:
+      - pgslave-2
+
   sonet-post:
     image: 'kpolyanichko/hl-sonet-post-hw-12-amd64:latest'
     build:
@@ -315,26 +379,81 @@ services:
       - REDIS_HOST=redis
     networks:
       - redisnet
+      - appnet
 
-  sonet-core:
+  sonet-core-1:
     image: 'kpolyanichko/hl-sonet-core-hw-12-amd64:latest'
     build:
       context: .
-    container_name: app-core
+    container_name: app-core-1
     ports:
-      - 8080:8080
+      - 8055:8080
     depends_on:
-      - postgres
+      - pgmaster-0
+      - pgslave-1
+      - pgslave-2
       - redis
     environment:
-      - DB_URL=jdbc:postgresql://postgres:5432/postgres
-      - DB_READ_URL=jdbc:postgresql://postgres:5432/postgres
+      - DB_URL=jdbc:postgresql://pgmaster-0:5432/postgres
+      - DB_READ_URL=jdbc:postgresql://host.docker.internal:5432/postgres
       - DB_PWD=pass
+      - DB_USER=postgres
       - REDIS_HOST=redis
-      - DIALOG_SERVICE_URI=host.docker.internal:8083
+      - DIALOG_SERVICE_URI=sonet-dialog:8080
     networks:
       - pgnet
       - redisnet
+      - appnet
+
+  sonet-core-2:
+    image: 'kpolyanichko/hl-sonet-core-hw-12-amd64:latest'
+    build:
+      context: .
+    container_name: app-core-2
+    ports:
+      - 8075:8080
+    depends_on:
+      - pgmaster-0
+      - pgslave-1
+      - pgslave-2
+      - redis
+    environment:
+      - DB_URL=jdbc:postgresql://pgmaster-0:5432/postgres
+      - DB_READ_URL=jdbc:postgresql://host.docker.internal:5432/postgres
+      - DB_PWD=pass
+      - DB_USER=postgres
+      - REDIS_HOST=redis
+      - DIALOG_SERVICE_URI=sonet-dialog:8080
+    networks:
+      - pgnet
+      - redisnet
+      - appnet
+
+  sonet-core-3:
+    image: 'kpolyanichko/hl-sonet-core-hw-12-amd64:latest'
+    build:
+      context: .
+    container_name: app-core-3
+    ports:
+      - 8065:8080
+    depends_on:
+      - pgmaster-0
+      - pgslave-1
+      - pgslave-2
+      - redis
+    environment:
+      - DB_URL=jdbc:postgresql://pgmaster-0:5432/postgres
+      - DB_READ_URL=jdbc:postgresql://host.docker.internal:5432/postgres
+      - DB_PWD=pass
+      - DB_USER=postgres
+      - REDIS_HOST=redis
+      - DIALOG_SERVICE_URI=sonet-dialog:8080
+    networks:
+      - pgnet
+      - redisnet
+      - appnet
+
+
 
   sonet-dialog:
     image: 'kpolyanichko/hl-sonet-dialog-hw-12-amd64:latest'
@@ -346,74 +465,94 @@ services:
       - 5000:5000
       - "127.0.0.1:33083:33083"
     depends_on:
-      - postgres
+      - pgdialogs
     environment:
       - DB_URL=jdbc:postgresql://pgdialogs:5432/postgres
-      - DB_READ_URL=jdbc:postgresql://pgdialogs:5432/postgres
       - DB_PWD=pass
-      - AUTH_SERVICE_URI=host.docker.internal:8080
+      - DB_USER=postgres
+      - AUTH_SERVICE_URI=sonet-core-1:8080
       - JMX_PORT=33083
     networks:
       - pgnet
+      - appnet
 
-  zabbix-server-pgsql:
-    image: zabbix/zabbix-server-pgsql:alpine-latest
-    container_name: zabbix-server-pgsql
-    ports:
-      - 10051:10051
-    environment:
-      - DB_SERVER_HOST=pgzabbix
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=pass
-      - POSTGRES_DB=postgres
-      - ZBX_JAVAGATEWAY=zabbix-java-gateway
-      - ZBX_JAVAGATEWAY_ENABLE=true
-      - ZBX_JAVAGATEWAYPORT=10052
-      - ZBX_STARTJAVAPOLLERS=5
-    depends_on:
-      - pgzabbix
-      - zabbix-java-gateway
-    networks:
-      - pgnet
+#  pgzabbix:
+#    container_name: pgzabbix
+#    image: postgres:14-alpine
+#    environment:
+#      POSTGRES_USER: postgres
+#      POSTGRES_PASSWORD: pass
+#      POSTGRES_DB: postgres
+#    healthcheck:
+#      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#    volumes:
+#      - ./volumes/pgzabbix/:/var/lib/postgresql/data
+#    networks:
+#      - pgnet
+#    ports:
+#      - 45432:5432
 
-  zabbix-web-nginx-pgsql:
-    image: zabbix/zabbix-web-nginx-pgsql:alpine-latest
-    container_name: zabbix-web-nginx-pgsql
-    environment:
-      - DB_SERVER_HOST=pgzabbix
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=pass
-      - POSTGRES_DB=postgres
-      - ZBX_SERVER_HOST=zabbix-server-pgsql
-    ports:
-      - '8585:8080'
-    depends_on:
-      - pgzabbix
-      - zabbix-server-pgsql
-      - zabbix-java-gateway
-    networks:
-      - pgnet
+#  zabbix-server-pgsql:
+#    image: zabbix/zabbix-server-pgsql:alpine-latest
+#    container_name: zabbix-server-pgsql
+#    ports:
+#      - 10051:10051
+#    environment:
+#      - DB_SERVER_HOST=pgzabbix
+#      - POSTGRES_USER=postgres
+#      - POSTGRES_PASSWORD=pass
+#      - POSTGRES_DB=postgres
+#      - ZBX_JAVAGATEWAY=zabbix-java-gateway
+#      - ZBX_JAVAGATEWAY_ENABLE=true
+#      - ZBX_JAVAGATEWAYPORT=10052
+#      - ZBX_STARTJAVAPOLLERS=5
+#    depends_on:
+#      - pgzabbix
+#      - zabbix-java-gateway
+#    networks:
+#      - pgnet
+
+#  zabbix-web-nginx-pgsql:
+#    image: zabbix/zabbix-web-nginx-pgsql:alpine-latest
+#    container_name: zabbix-web-nginx-pgsql
+#    environment:
+#      - DB_SERVER_HOST=pgzabbix
+#      - POSTGRES_USER=postgres
+#      - POSTGRES_PASSWORD=pass
+#      - POSTGRES_DB=postgres
+#      - ZBX_SERVER_HOST=zabbix-server-pgsql
+#    ports:
+#      - '8585:8080'
+#    depends_on:
+#      - pgzabbix
+#      - zabbix-server-pgsql
+#      - zabbix-java-gateway
+#    networks:
+#      - pgnet
 
 
-  zabbix-java-gateway:
-    image: zabbix/zabbix-java-gateway:alpine-6.4-latest
-    ports:
-      - "10052:10052"
-    deploy:
-      resources:
-        limits:
-          cpus: '0.5'
-          memory: 512M
-        reservations:
-          cpus: '0.25'
-          memory: 256M
-#    env_file:
-#      - ./env_vars/.env_java
-    networks:
-      - pgnet
-    stop_grace_period: 5s
-    labels:
-      com.zabbix.description: "Zabbix Java Gateway"
-      com.zabbix.company: "Zabbix LLC"
-      com.zabbix.component: "java-gateway"
-      com.zabbix.os: "alpine"
+#  zabbix-java-gateway:
+#    image: zabbix/zabbix-java-gateway:alpine-6.4-latest
+#    ports:
+#      - "10052:10052"
+#    deploy:
+#      resources:
+#        limits:
+#          cpus: '0.5'
+#          memory: 512M
+#        reservations:
+#          cpus: '0.25'
+#          memory: 256M
+##    env_file:
+##      - ./env_vars/.env_java
+#    networks:
+#      - pgnet
+#    stop_grace_period: 5s
+#    labels:
+#      com.zabbix.description: "Zabbix Java Gateway"
+#      com.zabbix.company: "Zabbix LLC"
+#      com.zabbix.component: "java-gateway"
+#      com.zabbix.os: "alpine"

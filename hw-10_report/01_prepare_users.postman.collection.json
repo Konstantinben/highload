@@ -1,0 +1,253 @@
+{
+	"info": {
+		"_postman_id": "9922ae4c-0e51-460e-b6fa-d7a9d408f733",
+		"name": "hl-sonet Nginx",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "5562917"
+	},
+	"item": [
+		{
+			"name": "user/register - User 2 Registration",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n        \"email\": \"new2@new.ru\",\r\n        \"firstName\": \"new2\",\r\n        \"password\": \"new2\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:80/app/user/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "80",
+					"path": [
+						"app",
+						"user",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/user/update User 2 Profile Update",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "new2",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "new2@new.ru",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"birthdate\": \"2017-02-03\",\r\n    \"gender\": \"F\",\r\n    \"biography\": \"tatata\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:80/app//user/update",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "80",
+					"path": [
+						"app",
+						"",
+						"user",
+						"update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/user/login User 2 Login",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\": \"new2@new.ru\",\r\n    \"password\": \"new2\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:80/app//user/login",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "80",
+					"path": [
+						"app",
+						"",
+						"user",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "user/register - User 1 Registration",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n        \"email\": \"new1@new.ru\",\r\n        \"firstName\": \"new1\",\r\n        \"password\": \"new1\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:80/app/user/register",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "80",
+					"path": [
+						"app",
+						"user",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/user/update User 1 Profile Update Copy",
+			"request": {
+				"auth": {
+					"type": "basic",
+					"basic": [
+						{
+							"key": "password",
+							"value": "new1",
+							"type": "string"
+						},
+						{
+							"key": "username",
+							"value": "new1@new.ru",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"birthdate\": \"2017-02-03\",\r\n    \"gender\": \"M\",\r\n    \"biography\": \"tatata\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:80/app/user/update",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "80",
+					"path": [
+						"app",
+						"user",
+						"update"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/user/get/{uuid} User 2 Profile",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:80/app//user/get/12e68bf7-a035-4d6f-9dcb-17abfe8a0da4",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "80",
+					"path": [
+						"app",
+						"",
+						"user",
+						"get",
+						"12e68bf7-a035-4d6f-9dcb-17abfe8a0da4"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "/user/get/{uuid} User 1 Profile",
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:80/app//user/get/7d73b937-ef68-489a-b2fd-b0e581591bdd",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "80",
+					"path": [
+						"app",
+						"",
+						"user",
+						"get",
+						"7d73b937-ef68-489a-b2fd-b0e581591bdd"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
